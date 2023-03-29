@@ -4,56 +4,21 @@
 
 #include "Vector_algebra.h"
 #include<iostream>
+#include<cmath>
 using namespace std;
 
 const float GRAV_CONST = 6.67*pow(10,-11);
 //(N*m^2)/kg^2 = (kg*m/s^2 *m^2)/kg^2 = m^3/(kg* s^2)
 
-/*
-332,132,231,233, (spigoli della faccio di y = +1)
-312,112,213,211, (spigoli della faccio di y = -1)
+float CostR, Angle; 
+float* ZERO = new float[3];
 
-323,123,213,233, (spigoli della faccio di z = +1)
-321,121,231,211, (spigoli della faccio di z = -1)
-*/
-
-const bool vicini[26][26] = {//322,122,232,212,223,221, (facce)
-							 //332,312,323,321, (spigoli della faccio di x = +1)
-							 //132,112,123,121, (spigoli della faccio di x = -1)
-							 //213,231,211,233  (spigoli con x = 0)
-							 //333,331,313,133,113,131,311,111 (vertici) 
-						//facce
-						{0,0,0,0,0,0, 1,1,1,1, 0,0,0,0, 0,0,0,0, 1,1,1,0,0,0,1,0},
-						{0,0,0,0,0,0, 0,0,0,0, 1,1,1,1, 0,0,0,0, 0,0,0,1,1,1,0,1},
-						{0,0,0,0,0,0, 1,0,0,0, 1,0,0,0, 0,1,0,1, 1,1,0,1,0,1,0,0},
-						{0,0,0,0,0,0, 0,1,0,0, 0,1,0,0, 1,0,1,0, 0,0,1,0,1,0,1,1},
-						{0,0,0,0,0,0, 0,0,1,0, 0,0,1,0, 1,0,0,1, 1,0,1,1,1,0,0,0},
-						{0,0,0,0,0,0, 0,0,0,1, 0,0,0,1, 0,1,1,0, 0,1,0,0,0,1,1,1},
-						//spigoli della faccio di x = +1
-						{1,0,1,0,0,0, 0,0,1,1, 0,0,0,0, 0,1,0,1, 1,1,0,0,0,0,0,0},
-						{1,0,0,1,0,0, 0,0,1,1, 0,0,0,0, 1,0,1,0, 0,0,1,0,0,0,1,0},
-						{1,0,0,0,1,0, 1,1,0,0, 0,0,0,0, 1,0,0,1, 1,0,1,0,0,0,0,0},
-						{1,0,0,0,0,1, 1,1,0,0, 0,0,0,0, 0,1,1,0, 0,1,0,0,0,0,1,0},
-						//spigoli della faccio di x = -1
-						{0,1,1,0,0,0, 0,0,0,0, 0,0,1,1, 0,1,0,1, 0,0,0,1,0,1,0,0},
-						{0,1,0,1,0,0, 0,0,0,0, 0,0,1,1, 1,0,1,0, 0,0,0,0,1,0,0,1},
-						{0,1,0,0,1,0, 0,0,0,0, 1,1,0,0, 1,0,0,1, 0,0,0,1,1,0,0,0},
-						{0,1,0,0,0,1, 0,0,0,0, 1,1,0,0, 0,1,1,0, 0,0,0,0,0,1,0,1},
-						//spigoli con x = 0
-						{0,0,0,1,1,0, 0,1,1,0, 0,1,1,0, 0,0,0,0, 0,0,1,0,1,0,0,0},
-						{0,0,1,0,0,1, 1,0,0,1, 1,0,0,1, 0,0,0,0, 0,1,0,0,0,1,0,0},
-						{0,0,0,1,0,1, 0,1,0,1, 0,1,0,1, 0,0,0,0, 0,0,0,0,0,0,1,1},
-						{0,0,1,0,1,0, 1,0,1,0, 1,0,1,0, 0,0,0,0, 1,0,0,1,0,0,0,0},
-						//vertici
-						{1,0,1,0,1,0, 1,0,1,0, 0,0,0,0, 0,0,0,1, 0,0,0,0,0,0,0,0},
-						{1,0,1,0,0,1, 1,0,0,1, 0,0,0,0, 0,1,0,0, 0,0,0,0,0,0,0,0},
-						{1,0,0,1,1,0, 0,1,1,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,0,0,0,0},
-						{0,1,1,0,1,0, 0,0,0,0, 1,0,1,0, 0,0,0,1, 0,0,0,0,0,0,0,0},
-						{0,1,0,1,1,0, 0,0,0,0, 0,1,1,0, 1,0,0,0, 0,0,0,0,0,0,0,0},
-						{0,1,1,0,0,1, 0,0,0,0, 1,0,0,1, 0,1,0,0, 0,0,0,0,0,0,0,0},
-						{1,0,0,1,0,1, 0,1,0,1, 0,0,0,0, 0,0,1,0, 0,0,0,0,0,0,0,0},
-						{0,1,0,1,0,1, 0,0,0,0, 0,1,0,1, 0,0,1,0, 0,0,0,0,0,0,0,0}
-						}; 
+float mod(float A, float B)
+{
+	while(A < 0) A += B;
+	while(A > B) A -= B;
+	return A;
+}
 
 class body3D
 {
@@ -66,11 +31,7 @@ class body3D
 		
 		float* time;
 		
-		short int ang_section = 0;
-		//1xx = (x=-1), 2xx = (x=0), 3xx = (x=1),
-		//x1x = (y=-1), x2x = (y=0), x3x = (y=1),
-		//xx1 = (z=-1), xx2 = (z=0), xx3 = (x=1)
-		short int ang_n = 0; //numero 0-25 della colonna/riga 
+		float radius2, theta, theta_sup, theta_inf, radius2_inf, radius2_sup; //raggio^2
 		
 	public:
 		body3D() 
@@ -86,8 +47,6 @@ class body3D
 			vec::copy(pos, Position);
 			vec::copy(vel, Velocity);
 			time = Time;
-			
-			evaluate_ang_section();
 		}
 		
 		body3D(float Mass, float* Position, float* Velocity, float* Time)
@@ -101,230 +60,86 @@ class body3D
 			//Suppongo che l'acc sia costante nel piccolo 
 			//intervallo di tempo che considero
 			// pos = t^2 * acc /2 + t * vel + pos
-			this->vel = vec::linear_sum(*time, this->acc, this->vel);
+			vec::linear_sum(this->vel, *time, this->acc, this->vel);
 			
-			float* A;
-			float* B;
-			A = vec::molt_scal( (*time)*(*time)/2 , this->acc);
-			B = vec::molt_scal( (*time) , this->vel);
+			float* A = new float[3];
+			float* B = new float[3];
+			vec::molt_scal(A, (*time)*(*time)/2 , this->acc);
+			vec::molt_scal(B, (*time) , this->vel);
 			
-			this->pos = vec::sum(A, B, this->pos);
-			evaluate_ang_section();
+			vec::sum(this->pos, A, B, this->pos);
 			
 			vec::azzera(this->acc);
 			delete[] A;
 			delete[] B;
 		}
 		
-		void evaluate_force(body3D b, bool optimise = false)
+		void evaluate_force(body3D* b, bool optimise = false)
 		{
 			if (optimise == true)
-				if ( check_ang_section(b.getang()) == 0)
-					return;
-//			cout << 1;
-
+			{
+				/* CASO BUCO NERO / STELLA MASSICCIA CENTRALE*/
+				if(    b->getradius2() < this->radius2_inf //Raggio
+					|| b->getradius2() > this->radius2_sup
+					|| b->gettheta()   < this->theta_inf
+					|| b->gettheta()   > this->theta_sup             )
+					{
+	//					cout << 1;
+						return;
+					} 
+			}			
+			
 			//m1 = this->mass
 			//m1*a = F = G(m1*m2)/r^2
 			//a = G*m2/r^2
 			//vec(a) = ( G*m2/(r^2)^(3/2) ) * vec(r) = k * vec(r)
 			
-			float* dist = vec::d(b.getpos(), this->pos);
+			float* dist = new float[3];
+			vec::d(dist, b->getpos(), this->pos);
 			float d2 = vec::squared( dist );
-			float k = ( GRAV_CONST * b.getmass() ) / ( d2 );
+			float k = ( GRAV_CONST * b->getmass() ) / ( d2 );
 			
-			if (optimise == true)
-			{
-				/* CASO BUCO NERO / STELLA MASSICCIA CENTRALE*/
-				if( (k*k) < ( 0.1 * vec::squared(this->acc)))
-				{
-//					cout << 1;
-					return;
-				} 
-			}
-
-			float* acc1 = vec::molt_scal( (k / sqrt(d2)) , dist);
-			this->acc = vec::sum(acc1, this->acc);
+			float* acc1 = new float[3];
+			float* force = new float[3];
+			vec::molt_scal(acc1, (k / sqrt(d2)) , dist);
+			vec::sum(this->acc, acc1, this->acc);
 			
-			b.setforce( vec::molt_scal( this->mass, acc1 ) );
+			vec::molt_scal(force, this->mass, acc1 );
+			b->setforce( force );
 			delete[] acc1;
-		}
-		
-		bool check_ang_section(int ang2)
-		{
-			//1xx = (x=-1), 2xx = (x=0), 3xx = (x=1),
-			//x1x = (y=-1), x2x = (y=0), x3x = (y=1),
-			//xx1 = (z=-1), xx2 = (z=0), xx3 = (z=1)
-			
-			return vicini[this->ang_n][ang2];
-		}
-		
-		void evaluate_ang_section()
-		{
-			//1xx = (x=-1), 2xx = (x=0), 3xx = (x=1),
-			//x1x = (y=-1), x2x = (y=0), x3x = (y=1),
-			//xx1 = (z=-1), xx2 = (z=0), xx3 = (z=1)
-			this->ang_section = 0;
-			
-			float value = this->pos[1] / this->pos[0];
-			if(this->pos[0] > 0)
-			{
-				if ( value > 2.41421) // y/x > tan(3*pi/8)
-				{
-					//x = 0, y = 1
-					this->ang_section += 230;
-				}
-				else if ( value > 0.41421) // y/x > tan(pi/8)
-				{
-					//x = 1, y= 1
-					this->ang_section += 330;
-				}
-				else if ( value > -0.41421)
-				{
-					//x = 1, y= 0
-					this->ang_section += 320;
-				}
-				else if ( value > -2.41421)
-				{
-					//x = 1, y= -1
-					this->ang_section += 310;
-				}
-				else
-				{
-					//x = 0, y= -1
-					this->ang_section += 210;
-				}
-			}
-			else
-			{
-				if ( value > 2.41421) // y/x > tan(3*pi/8)
-				{
-					//x = 0, y = -1
-					this->ang_section += 210;
-				}
-				else if ( value > 0.41421) // y/x > tan(pi/8)
-				{
-					//x = -1, y = -1
-					this->ang_section += 110;
-				}
-				else if ( value > -0.41421)
-				{
-					//x = -1, y = 0
-					this->ang_section += 120;
-				}
-				else if ( value > -2.41421)
-				{
-					//x = -1, y = 1
-					this->ang_section += 130;
-				}
-				else
-				{
-					//x = 0, y = 1
-					this->ang_section += 230;
-				}
-			}
-			
-			value = this->pos[2] / this->pos[0];
-			if(this->pos[0] > 0)
-			{
-//				if ( value > 2.41421) // z/x > tan(3*pi/8)
-//				{
-//					//x = 0, z = 1
-//					this->ang_section += 3;
-//				}
-				if ( value > 0.41421) // z/x > tan(pi/8)
-				{
-					//x = 1, z = 1
-					this->ang_section += 3;
-				}
-				else if ( value > -0.41421)
-				{
-					//x = 1, z = 0
-					this->ang_section += 2;
-				}
-//				else if ( value > -2.41421)
-//				{
-//					//x = 1, z = -1
-//					this->ang_section += 1;
-//				}
-				else
-				{
-					//x = 0, z = -1
-					this->ang_section += 1;
-				}
-			}
-			else
-			{
-//				if ( value > 2.41421) // z/x > tan(3*pi/8)
-//				{
-//					//x = 0, z = -1
-//					this->ang_section += 1;
-//				}
-				if ( value > 0.41421) // z/x > tan(pi/8)
-				{
-					//x = -1, z = -1
-					this->ang_section += 1;
-				}
-				else if ( value > -0.41421)
-				{
-					//x = -1, z = 0
-					this->ang_section += 2;
-				}
-//				else if ( value > -2.41421)
-//				{
-//					//x = -1, z = 1
-//					this->ang_section += 3;
-//				}
-				else
-				{
-					//x = 0, z = 1
-					this->ang_section += 3;
-				}
-			}
-			
-			//assegno ang_n ad ogni ang_section
-			{
-			//322,122,232,212,223,221, (facce)
-			if (this->ang_section == 322) this->ang_n = 0;
-			else if (this->ang_section == 122) this->ang_n = 1;
-			else if (this->ang_section == 232) this->ang_n = 2;
-			else if (this->ang_section == 212) this->ang_n = 3;
-			else if (this->ang_section == 223) this->ang_n = 4;
-			else if (this->ang_section == 221) this->ang_n = 5;
-			
-			//332,312,323,321, (spigoli della faccio di x = +1)
-			else if (this->ang_section == 332) this->ang_n = 6;
-			else if (this->ang_section == 312) this->ang_n = 7;
-			else if (this->ang_section == 323) this->ang_n = 8;
-			else if (this->ang_section == 321) this->ang_n = 9;
-			
-			//132,112,123,121, (spigoli della faccio di x = -1)
-			else if (this->ang_section == 132) this->ang_n = 10;
-			else if (this->ang_section == 112) this->ang_n = 11;
-			else if (this->ang_section == 123) this->ang_n = 12;
-			else if (this->ang_section == 121) this->ang_n = 13;
-			
-			//213,231,211,233  (spigoli con x = 0)
-			else if (this->ang_section == 213) this->ang_n = 14;
-			else if (this->ang_section == 231) this->ang_n = 15;
-			else if (this->ang_section == 211) this->ang_n = 16;
-			else if (this->ang_section == 233) this->ang_n = 17;
-			
-			//333,331,313,133,113,131,311,111 (vertici)
-			else if (this->ang_section == 333) this->ang_n = 18;
-			else if (this->ang_section == 331) this->ang_n = 19;
-			else if (this->ang_section == 313) this->ang_n = 20;
-			else if (this->ang_section == 133) this->ang_n = 21;
-			else if (this->ang_section == 113) this->ang_n = 22;
-			else if (this->ang_section == 131) this->ang_n = 23;
-			else if (this->ang_section == 311) this->ang_n = 24;
-			else if (this->ang_section == 111) this->ang_n = 25;
-			}
+			delete[] force;
+			delete[] dist;
 		}
 		
 		void setforce(float* force)
 		{
-			this->acc = vec::linear_sum( (-1/this->mass), force, this->acc );
-			delete[] force;
+			vec::linear_sum(this->acc, (-1/this->mass), force, this->acc );
+		}
+		
+		void update_polar_coord()
+		{
+			float* dist = new float[3];
+			vec::d(dist, ZERO, this->pos);
+			this->radius2 = vec::squared( dist );
+			delete[] dist;
+			
+			this->radius2_sup = this->radius2 * ( 1+ CostR );
+			this->radius2_inf = this->radius2 * ( 1- CostR );
+			
+			this->theta = atan( this->pos[1] / this->pos[0] );
+			
+			if ( this->pos[0] <= 0 ) this->theta += 3.141592;
+//			else if ( this->pos[1] < 0 ) this->theta += 2* 3.141592;
+			
+			this->theta_sup = mod( (this->theta + Angle), (2*3.141592) );
+			this->theta_inf = mod( (this->theta - Angle), (2*3.141592) );
+		}
+		
+		void set_Cost(float Mcorpo, float Mstella)
+		{
+			CostR = 3000 * Mcorpo / Mstella;
+			Angle = atan( sqrt( CostR ) );
+			vec::azzera(ZERO);
 		}
 		
 		float getmass()
@@ -332,14 +147,14 @@ class body3D
 			return mass;
 		}
 		
-		int getang()
+		float getradius2()
 		{
-			return ang_n;
+			return radius2;
 		}
 		
-		int getang_section()
+		float gettheta()
 		{
-			return ang_section;
+			return theta;
 		}
 		
 		float* getpos()
