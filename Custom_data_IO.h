@@ -13,14 +13,19 @@ void rand_normal_distribution(body3D* Galaxy, int totbodies,
 {
 	default_random_engine R;
 	normal_distribution<float> randxy(0, 1*pow(10, 12));
-	normal_distribution<float> randz(0, 1*pow(10, 11));
-	normal_distribution<float> randtheta(0, 3.1415/10);
+	normal_distribution<float> randz(0, 1*pow(10, 10));
+	normal_distribution<float> randtheta(0, 3.1415/12);
+	
+	float min_radius = 3*pow(10, 11);
+	float max_radius = 2*pow(10, 12);
 	
 	float* pos = new float[3];
 	float* vel = new float[3];
 	
 	for (int i = 1; i < totbodies; i++)
     {
+    	setpos:
+    	
     	pos[0] = randxy(R);
 		pos[1] = randxy(R);
 		pos[2] = randz(R);
@@ -35,12 +40,14 @@ void rand_normal_distribution(body3D* Galaxy, int totbodies,
 	    */
     	
 		float d = sqrt( vec::squared( pos ) );
+		if (min_radius > d || max_radius < d) goto setpos;
+		
 		float k = sqrt( 6.67*pow(10,-11) * massatot / d ) /d;
 		
     	vel[0] = pos[1];
     	vel[1] = -pos[0];
     	vel[2] = 0;
-    	vel = vec::molt_scal(k, vel);
+    	vec::molt_scal(vel, k, vel);
     	vec::rotate(vel, randtheta(R));
     	
     	Galaxy[i].set_param(massa, pos, vel, Time);
@@ -131,7 +138,7 @@ void binary_import(string filename, body3D* Galaxy, int totbodies,
 	    	vel[0] = pos[1];
 	    	vel[1] = -pos[0];
 	    	vel[2] = 0;
-	    	vel = vec::molt_scal(k, vel);
+	    	vec::molt_scal(vel, k, vel);
 	    	vec::rotate(vel, randtheta(R));
 		}
     	
@@ -162,6 +169,34 @@ vec3D* binary_import2(string filename, int totbodies)
 	
 	return v;
 }
+
+
+class filewriter
+{
+	private:
+		ofstream pen;
+	
+	public:
+		filewriter(string filename, bool append = false)
+		{
+			if (append)
+				pen.open( filename, ios::out | ios::binary | ios::app);
+			else
+				pen.open( filename, ios::out | ios::binary );
+		}
+		
+		void en_write(double p_en, double k_en)
+		{
+			pen.write((char*)(&p_en), sizeof(double));
+			pen.write((char*)(&k_en), sizeof(double));
+		}
+		
+		
+		void close()
+		{
+			pen.close();
+		}
+};
 
 
 
