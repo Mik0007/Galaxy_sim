@@ -128,14 +128,14 @@ void render_image(unsigned char image[height][width][BYTES_PER_PIXEL],
     massatot += Mb;
     
     //Riempio l'array con dati random
-//    rand_normal_distribution(Galaxy, totbodies, massatot, massa, &Time);
+    rand_normal_distribution(Galaxy, totbodies, massatot, massa, &Time);
 
-	//Oppure con i dati gi‡ registrati
+	//Oppure con i dati gi√† registrati
 	//n del file da cui caricare i dati
     int load = 2000;
-	binary_import( "Data/Binary_Data/orbiting_data" + to_string(load) + ".dat" , 
-					Galaxy, totbodies, massatot, massa, &Time, true);
-	T++;
+	//binary_import( "Data/Binary_Data/orbiting_data" + to_string(load) + ".dat" , 
+	//				Galaxy, totbodies, massatot, massa, &Time, true);
+	//T++;
     
     Galaxy[0].set_Cost(massa, Mb);
     
@@ -160,7 +160,7 @@ void render_image(unsigned char image[height][width][BYTES_PER_PIXEL],
 	
     filewriter pen("Data/Binary_Data/energy.dat", true);
     
-    omp_set_num_threads(2);
+    omp_set_num_threads(8);
     
     cout << "\nInizio dei calcoli...\n";
     
@@ -249,7 +249,7 @@ void render_image(unsigned char image[height][width][BYTES_PER_PIXEL],
 	
 	pen.close();
 	
-	//Esporto le velocit‡ finali su un file binario
+	//Esporto le velocit√† finali su un file binario
 	binary_export("Data/Binary_Data/vel_finali.dat", Galaxy, totbodies, true);
 }
 
